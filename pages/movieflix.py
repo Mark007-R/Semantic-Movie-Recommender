@@ -10,6 +10,10 @@ import logging
 import random
 import atexit
 
+repo_root = Path(__file__).resolve().parent.parent
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
 utils_dir = Path(__file__).resolve().parent.parent / 'utils'
 if str(utils_dir) not in sys.path:
     sys.path.insert(0, str(utils_dir))
@@ -36,6 +40,7 @@ from helpers import (
     save_movie_note, calculate_watch_time, calculate_average_rating,
     get_watchlist_ids, get_favorites_ids
 )
+from src.serving.ui_theme import apply_theme
 
 atexit.register(milvus_disconnect)
 
@@ -48,6 +53,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+apply_theme()  # shared mark.dev paper theme; style.css below adds the CineSemantics components on its tokens
 
 def load_css():
     css_path = Path(__file__).parent / "style.css"
@@ -105,15 +111,15 @@ def display_movie_card(movie, card_key="", show_actions=True):
                     st.image(movie['poster_url'], use_container_width=True)
                 except Exception as e:
                     logger.warning("Failed to render poster_url image: %s", e)
-                    st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: linear-gradient(135deg, #1a1a3e, #0a0a1a); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: var(--paper-alt); border: 1px solid var(--line); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
             elif movie.get('image_path') and os.path.exists(movie['image_path']):
                 try:
                     st.image(movie['image_path'], use_container_width=True)
                 except Exception as e:
                     logger.warning("Failed to render image_path image: %s", e)
-                    st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: linear-gradient(135deg, #1a1a3e, #0a0a1a); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: var(--paper-alt); border: 1px solid var(--line); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
             else:
-                st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: linear-gradient(135deg, #1a1a3e, #0a0a1a); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-size: 80px; text-align: center; padding: 40px; background: var(--paper-alt); border: 1px solid var(--line); border-radius: 12px;'>🎬</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
         
         with col2:
@@ -149,7 +155,7 @@ def display_movie_card(movie, card_key="", show_actions=True):
             
             if movie_id in st.session_state.movie_notes and st.session_state.movie_notes[movie_id]:
                 note_preview = html.escape(str(st.session_state.movie_notes[movie_id][:50]))
-                st.markdown(f"<div style='color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-top: 8px;'>{note_preview}...</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color: var(--ink-3); font-size: 0.85rem; margin-top: 8px;'>{note_preview}...</div>", unsafe_allow_html=True)
             
             if show_actions:
                 watchlist_ids = get_watchlist_ids(st.session_state)
@@ -205,7 +211,7 @@ def main():
     
     st.markdown("""
         <div class='main-header'>
-            <h1 class='logo-text'>CineSemantics</h1>
+            <h1 class='logo-text'>Cine<em>Semantics</em></h1>
             <p class='tagline'>AI-Powered Movie Discovery - Find Your Next Favorite Film</p>
         </div>
     """, unsafe_allow_html=True)
@@ -289,7 +295,7 @@ def main():
             st.markdown("</div>", unsafe_allow_html=True)
         
         with col_info:
-            st.markdown("<p style='color: rgba(255,255,255,0.5); margin-top: 10px;'>Let AI pick random movies based on quality, uniqueness, and hidden gems!</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: var(--ink-3); margin-top: 10px;'>Let AI pick random movies based on quality, uniqueness, and hidden gems!</p>", unsafe_allow_html=True)
         
         if 'surprise_results' in st.session_state and st.session_state.surprise_results:
             st.markdown("<br>", unsafe_allow_html=True)
@@ -383,7 +389,7 @@ def main():
 
     with tab2:
         st.markdown("<div class='section-title'>Smart Movie Search</div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: rgba(255,255,255,0.6);'>Describe what you're looking for - our AI understands natural language!</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: var(--ink-2);'>Describe what you're looking for - our AI understands natural language!</p>", unsafe_allow_html=True)
 
         if 'quick_search' in st.session_state:
             st.session_state.search_query = st.session_state.quick_search
@@ -397,7 +403,7 @@ def main():
             key="search_query"
         )
         
-        st.markdown("<p style='color: rgba(255,255,255,0.5); font-size: 0.85rem; margin: 15px 0 10px 0;'>Quick searches:</p>", unsafe_allow_html=True)
+        st.markdown("<p class='micro-label' style='margin: 15px 0 10px 0;'>Quick searches:</p>", unsafe_allow_html=True)
         quick_cols = st.columns(4)
         for idx, suggestion in enumerate(QUICK_SEARCHES):
             with quick_cols[idx % 4]:
@@ -419,14 +425,14 @@ def main():
                         short_query = raw_query[:50]
                         safe_query = html.escape(short_query)
                         st.markdown(
-                            f"<div style='color: rgba(255,255,255,0.7);'>{safe_query}...</div>"
+                            f"<div style='color: var(--ink-2);'>{safe_query}...</div>"
                             if len(raw_query) > 50
-                            else f"<div style='color: rgba(255,255,255,0.7);'>{safe_query}</div>",
+                            else f"<div style='color: var(--ink-2);'>{safe_query}</div>",
                             unsafe_allow_html=True
                         )
                     with col_time:
                         safe_timestamp = html.escape(str(hist_item['timestamp']))
-                        st.markdown(f"<div style='color: rgba(255,255,255,0.4); font-size: 0.8rem;'>{safe_timestamp}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='micro-label'>{safe_timestamp}</div>", unsafe_allow_html=True)
                     with col_btn:
                         if st.button("Re-search", key=f"hist_{hist_idx}", use_container_width=True):
                             st.session_state['quick_search'] = hist_item['query']
@@ -506,7 +512,7 @@ def main():
 
     with tab3:
         st.markdown("<div class='section-title'>Visual Movie Discovery</div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: rgba(255,255,255,0.6);'>Upload a movie poster or any image - our AI will find visually similar films!</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: var(--ink-2);'>Upload a movie poster or any image - our AI will find visually similar films!</p>", unsafe_allow_html=True)
         
         col_upload, col_info = st.columns([2, 1])
         with col_upload:
@@ -518,8 +524,8 @@ def main():
             )
         with col_info:
             st.markdown("""
-                <div style='background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);'>
-                    <p style='color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0;'>
+                <div style='background: var(--card); border-radius: 16px; padding: 20px; border: 1px solid var(--line); box-shadow: var(--shadow-sm);'>
+                    <p style='color: var(--ink-2); font-size: 0.9rem; margin: 0;'>
                         <strong>Tips:</strong><br>
                         - Upload movie posters for best results<br>
                         - Higher quality images = better matches<br>
@@ -533,7 +539,7 @@ def main():
             col1, col2 = st.columns([1, 2])
             
             with col1:
-                st.markdown("<div style='background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px;'>", unsafe_allow_html=True)
+                st.markdown("<div style='background: transparent; border-radius: 20px; padding: 20px;'>", unsafe_allow_html=True)
                 img = Image.open(uploaded)
                 st.image(img, use_container_width=True, caption="Your uploaded image")
                 
@@ -585,8 +591,8 @@ def main():
                                     os.remove(path)
                 else:
                     st.markdown("""
-                        <div style='text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4);'>
-                            <p style='font-size: 3rem; margin-bottom: 15px;'>MOVIE</p>
+                        <div style='text-align: center; padding: 60px 20px; color: var(--ink-3);'>
+                            <p class='empty-mark' style='font-size: 3rem; margin-bottom: 15px;'>MOVIE</p>
                             <p>Click "Find Similar Movies" to start visual search</p>
                         </div>
                     """, unsafe_allow_html=True)
@@ -598,7 +604,7 @@ def main():
             col_stats, col_export, col_clear = st.columns([3, 1, 1])
             with col_stats:
                 st.markdown(f"""
-                    <p style='color: rgba(255,255,255,0.7);'>
+                    <p style='color: var(--ink-2);'>
                         <strong>{len(st.session_state.watchlist)}</strong> movies to watch 
                         - Estimated watch time: ~<strong>{calculate_watch_time(st.session_state.watchlist)}</strong> hours
                     </p>
@@ -667,8 +673,8 @@ def main():
                     st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.markdown("""
-                <div style='text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.4);'>
-                    <p style='font-size: 4rem; margin-bottom: 20px;'>LIST</p>
+                <div style='text-align: center; padding: 80px 20px; color: var(--ink-3);'>
+                    <p class='empty-mark' style='font-size: 4rem; margin-bottom: 20px;'>LIST</p>
                     <p style='font-size: 1.2rem;'>Your watchlist is empty</p>
                     <p style='font-size: 0.9rem; margin-top: 10px;'>Go to Discover or Search to add movies!</p>
                 </div>
@@ -682,7 +688,7 @@ def main():
             with col_stats:
                 avg_rating = calculate_average_rating(st.session_state.favorites)
                 st.markdown(f"""
-                    <p style='color: rgba(255,255,255,0.7);'>
+                    <p style='color: var(--ink-2);'>
                         <strong>{len(st.session_state.favorites)}</strong> favorite movies 
                         - Average rating: <strong>{avg_rating:.1f}</strong>/10
                     </p>
@@ -720,7 +726,7 @@ def main():
                     safe_added = html.escape(str(movie.get('added_date', 'Unknown')))
                     
                     list_html = "\n".join([
-                        "<div class='list-item' style='border-left-color: #ec4899;'>",
+                        "<div class='list-item' style='border-left-color: var(--accent-soft);'>",
                         "<div class='list-title'>",
                         f"<span class='list-name'>{safe_title}</span>",
                         f"<span class='star-rating'>{stars}</span>",
@@ -752,8 +758,8 @@ def main():
                     st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.markdown("""
-                <div style='text-align: center; padding: 80px 20px; color: rgba(255,255,255,0.4);'>
-                    <p style='font-size: 4rem; margin-bottom: 20px;'>FAVS</p>
+                <div style='text-align: center; padding: 80px 20px; color: var(--ink-3);'>
+                    <p class='empty-mark' style='font-size: 4rem; margin-bottom: 20px;'>FAVS</p>
                     <p style='font-size: 1.2rem;'>No favorites yet</p>
                     <p style='font-size: 0.9rem; margin-top: 10px;'>Mark movies as favorites to save them here!</p>
                 </div>
@@ -762,22 +768,22 @@ def main():
     st.markdown("""
         <div style='
             text-align: center; 
-            color: rgba(255,255,255,0.4); 
+            color: var(--ink-3); 
             padding: 50px 20px; 
             font-size: 0.9rem;
-            background: linear-gradient(180deg, transparent 0%, rgba(229, 9, 20, 0.05) 100%);
-            border-top: 1px solid rgba(255,255,255,0.05);
+            background: transparent;
+            border-top: 1px solid var(--line);
             margin-top: 40px;
         '>
-            <p style='font-size: 1.8rem; font-weight: 800; margin-bottom: 15px; background: linear-gradient(135deg, #2dd4bf, #5eead4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>CineSemantics</p>
-            <p style='color: rgba(255,255,255,0.5);'>Powered by AI Vector Search - Built with Streamlit & Milvus</p>
-            <p style='font-size: 0.8rem; margin-top: 15px; color: rgba(255,255,255,0.3);'>
+            <p class='footer-brand'>Cine<em>Semantics</em></p>
+            <p style='color: var(--ink-2);'>Powered by AI Vector Search - Built with Streamlit & Milvus</p>
+            <p style='font-size: 0.8rem; margin-top: 15px; color: var(--ink-3);'>
                 Discover - Explore - Enjoy - Your perfect movie is just a search away
             </p>
-            <div style='margin-top: 20px; display: flex; justify-content: center; gap: 20px;'>
-                <span style='color: rgba(255,255,255,0.4);'>AI-Powered</span>
-                <span style='color: rgba(255,255,255,0.4);'>Semantic Search</span>
-                <span style='color: rgba(255,255,255,0.4);'>Visual Discovery</span>
+            <div style='margin-top: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;'>
+                <span class='micro-label'>AI-Powered</span>
+                <span class='micro-label'>Semantic Search</span>
+                <span class='micro-label'>Visual Discovery</span>
             </div>
         </div>
     """, unsafe_allow_html=True)

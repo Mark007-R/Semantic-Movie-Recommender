@@ -1,0 +1,9 @@
+# Native Streamlit widgets share the mark.dev paper palette with
+# src/serving/ui_theme.py (MODE = "light"). Accent for this project: Rose.
+[theme]
+base = "light"
+primaryColor = "#BE123C"
+backgroundColor = "#fefaf5"
+secondaryBackgroundColor = "#faf2e9"
+textColor = "#1c1714"
+font = "sans serif"

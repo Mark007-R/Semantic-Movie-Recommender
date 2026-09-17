@@ -15,6 +15,7 @@ Artifacts required (all shipped with the repo / space):
 """
 from __future__ import annotations
 
+import html
 import sys
 from pathlib import Path
 
@@ -30,8 +31,58 @@ from src.retrieval.index import MovieIndex                    # noqa: E402
 from src.rerank.metadata_rerank import MetadataReranker       # noqa: E402
 from src.recsys.recommender import ItemKNNRecommender         # noqa: E402
 from src.serving.offline_metrics import panel as offline_panel  # noqa: E402
+from src.serving import ui_theme                              # noqa: E402
 
 st.set_page_config(page_title="CineSemantics", page_icon="🎬", layout="wide")
+ui_theme.apply_theme()
+
+
+def _results_css() -> str:
+    """Result-row cards and the metrics panel, written against ui_theme's tokens."""
+    mono, display = ui_theme.FONT_MONO, ui_theme.FONT_DISPLAY
+    return f"""
+<style>
+.stApp h1 em {{ font-style: italic; font-weight: 600; color: var(--accent); }}
+
+.cs-row {{
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: .7rem 1.1rem .7rem .7rem; box-shadow: var(--shadow-sm);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}}
+.cs-row:hover {{ border-color: var(--line-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }}
+.cs-poster {{
+  flex: 0 0 64px; width: 64px; height: 96px; object-fit: cover;
+  border-radius: 10px; border: 1px solid var(--line); background: var(--paper-alt);
+}}
+.cs-body {{ flex: 1 1 auto; min-width: 0; }}
+.cs-title {{ font-family: {display}; font-weight: 600; font-size: 1.1rem; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere; }}
+.cs-year {{ font-family: {mono}; font-size: .72rem; font-weight: 500; letter-spacing: .04em; color: var(--ink-3); }}
+.cs-genre {{
+  margin-top: .35rem; font-family: {mono}; font-size: .66rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3);
+}}
+.cs-score {{ flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; }}
+.cs-score-value {{
+  font-family: {mono}; font-size: .8rem; font-weight: 600; color: var(--accent);
+  background: var(--accent-tint); border: 1px solid var(--accent-line); border-radius: 999px; padding: .2rem .7rem;
+}}
+.cs-method {{ font-family: {mono}; font-size: .6rem; font-weight: 500; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); }}
+
+[data-testid="stJson"] {{
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: .85rem 1.1rem; box-shadow: var(--shadow-sm);
+}}
+
+@media (max-width: 480px) {{
+  .cs-row {{ gap: .7rem; padding-right: .8rem; }}
+  .cs-poster {{ flex-basis: 48px; width: 48px; height: 72px; }}
+}}
+</style>
+"""
+
+
+st.markdown(_results_css(), unsafe_allow_html=True)
 
 
 @st.cache_resource(show_spinner="Loading catalog, embeddings and index…")
@@ -53,25 +104,32 @@ def load_stack():
 
 
 def movie_row(meta: dict | pd.Series, score: float, method: str | None = None):
-    """One result row: poster thumbnail + title/genre/year + score."""
-    c1, c2, c3 = st.columns([1, 6, 2])
+    """One result row, as a card: poster thumbnail + title/genre/year + score."""
     url = str(meta.get("Poster_Url", "") or "")
-    with c1:
-        if url.startswith("http"):
-            st.image(url, width=64)
-    with c2:
-        year = str(meta.get("Release_Date", ""))[:4]
-        st.markdown(f"**{meta.get('Title', '')}** ({year})  \n"
-                    f"<span style='color:gray;font-size:0.85em'>{meta.get('Genre', '')}</span>",
-                    unsafe_allow_html=True)
-    with c3:
-        st.markdown(f"`{score:.3f}`" + (f"  \n{method}" if method else ""))
+    year = str(meta.get("Release_Date", ""))[:4]
+    poster = (f"<img class='cs-poster' src='{html.escape(url, quote=True)}' alt=''>"
+              if url.startswith("http") else "<div class='cs-poster'></div>")
+    method_html = f"<span class='cs-method'>{html.escape(str(method))}</span>" if method else ""
+    st.markdown(
+        "<div class='cs-row'>"
+        f"{poster}"
+        "<div class='cs-body'>"
+        f"<div class='cs-title'>{html.escape(str(meta.get('Title', '')))} "
+        f"<span class='cs-year'>({html.escape(year)})</span></div>"
+        f"<div class='cs-genre'>{html.escape(str(meta.get('Genre', '')))}</div>"
+        "</div>"
+        "<div class='cs-score'>"
+        f"<span class='cs-score-value'>{score:.3f}</span>{method_html}"
+        "</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def main() -> None:
     catalog, index, reranker, rec, genres = load_stack()
 
-    st.title("🎬 CineSemantics")
+    st.title("🎬 Cine*Semantics*")
     st.caption(
         f"Semantic search + personalized recommendation over {len(catalog):,} TMDB movies — "
         "e5-base-v2 embeddings, faiss HNSW, metadata rerank, ItemKNN collaborative filtering. "
