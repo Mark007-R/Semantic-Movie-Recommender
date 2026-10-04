@@ -332,7 +332,7 @@ def components_css() -> str:
   animation: cs-pulse 2.4s ease-out infinite;
 }}
 @keyframes cs-pulse {{ 0% {{ transform: scale(.6); opacity: .9; }} 100% {{ transform: scale(2.2); opacity: 0; }} }}
-@media (prefers-reduced-motion: reduce) {{ .pulse::after {{ animation: none; }} }}
+@media (prefers-reduced-motion: reduce) {{ .pulse::after {{ animation: none; display: none; }} }}
 .ph {{ margin: .25rem 0 1.5rem; }}
 .stApp .hero-title, .stApp .ph-title {{
   font-family: var(--display); font-weight: 600; letter-spacing: -.035em; color: var(--ink);
