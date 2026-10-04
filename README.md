@@ -2,7 +2,7 @@
 
 # Semantic-Movie-Recommender
 
-A movie recommendation service over a 9,826-film TMDB catalog with posters. It does semantic search ("space adventure with robots"), item-to-item similarity ("more like Toy Story"), and personalized recommendations from a list of films you liked — served through a Streamlit UI and a FastAPI service backed by faiss or Milvus HNSW.
+A movie recommendation service over a 9,837-film TMDB catalog with posters. It does semantic search ("space adventure with robots"), item-to-item similarity ("more like Toy Story"), and personalized recommendations from a list of films you liked — served through a Streamlit UI and a FastAPI service backed by faiss or Milvus HNSW.
 
 The project's spine is its offline evaluation harness, which was built **before** any tuning. Every claim below is a number that harness produced on a held-out split, including the ones that show a component didn't help.
 
@@ -97,6 +97,10 @@ That grounding failure is structural: a CF model can only ever return items that
 pip install -r requirements.txt          # Streamlit app deps
 pip install -r requirements-api.txt      # FastAPI service deps
 
+# 0. The live-demo UI (Discover / More like this / For you / Evaluation) — no Milvus;
+#    needs the cached e5-base-v2 vectors and models/ (pinned deps: requirements-space.txt)
+streamlit run src/serving/space_app.py
+
 # 1. Streamlit UI (Discover / Search / Visual / For-You)
 streamlit run pages/movieflix.py
 
@@ -125,7 +129,7 @@ Regenerate the architecture diagram with `python assets/make_architecture.py`.
 
 ## Data
 
-- **Catalog:** `data/9000plus.csv` (9,826 TMDB films) + `posters/` (~9,509 images).
+- **Catalog:** `data/9000plus.csv` (9,837 TMDB films) + `posters/` (~9,509 images).
 - **Interactions:** public MovieLens ml-latest-small, aligned by (title, year).
 - **Splits:** per-user temporal hold-out; candidate universe is training-only items.
 - Cached embeddings live in `results/emb_cache/` so the API and eval share one encode.

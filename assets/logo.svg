@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 214 40" width="214" height="40">
+  <rect x="4" y="7" width="30" height="26" rx="6" fill="#BE123C" fill-opacity=".1" stroke="#BE123C" stroke-width="2.2"/>
+  <path d="M9.5 11.5h2.6M15.2 11.5h2.6M20.9 11.5h2.6M26.6 11.5h2.6M9.5 28.5h2.6M15.2 28.5h2.6M20.9 28.5h2.6M26.6 28.5h2.6" stroke="#BE123C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M16.2 15.6v8.8l7.4-4.4z" fill="#BE123C"/>
+  <text x="44" y="27" font-family="Fraunces, Georgia, 'Times New Roman', serif" font-size="21" letter-spacing="-.3"><tspan fill="#1c1714" font-weight="700">Cine</tspan><tspan fill="#BE123C" font-style="italic" font-weight="600">Semantics</tspan></text>
+</svg>
