@@ -132,6 +132,19 @@ class ItemKNNRecommender:
             recs = self._content_recommend(liked, top_k)
         return [{"index": i, "score": round(s, 4), "method": method} for i, s in recs]
 
+    def explain(self, liked_catalog_idx, item_idx: int):
+        """The liked catalog index that contributes most to `item_idx`'s ItemKNN
+        score (its nearest liked neighbour), or None when the item or every
+        liked title is outside the CF universe. Used for "because you liked X"."""
+        if self.S is None or int(item_idx) not in self._col:
+            return None
+        cols = [(int(i), self._col[int(i)]) for i in liked_catalog_idx if int(i) in self._col]
+        if not cols:
+            return None
+        j = self._col[int(item_idx)]
+        best, sim = max(((i, float(self.S[c, j])) for i, c in cols), key=lambda x: x[1])
+        return best if sim > 0 else None
+
     def _mmr(self, scores, seen_cols, lam, top_k, pool=60):
         """Maximal Marginal Relevance over the top-`pool` items, genre-Jaccard
         as the redundancy term. Returns selected item_universe columns."""

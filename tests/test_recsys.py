@@ -101,6 +101,17 @@ def test_mmr_diversity_stays_catalog_valid():
     assert all(r["index"] in range(6) for r in out)
 
 
+def test_explain_names_the_liked_neighbour():
+    rec = _fit()
+    # item 2 co-occurs with item 1 (users 0, 2) more than with item 0 (user 0)
+    assert rec.explain([0, 1], 2) == 1
+    # no liked title shares a user with the other clique
+    assert rec.explain([0, 1], 4) is None
+    # items outside the CF universe have no explanation
+    assert rec.explain([0], 99) is None
+    assert rec.explain([99], 1) is None
+
+
 # ---- persistence -----------------------------------------------------------
 def test_save_load_roundtrip_preserves_item_universe(tmp_path):
     rec = _fit()
