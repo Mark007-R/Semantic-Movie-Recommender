@@ -1,12 +1,20 @@
 # CineSemantics Hugging Face Space (Streamlit demo, src/serving/space_app.py).
-# Same stack as requirements-api.txt minus the API layer (fastapi/uvicorn/redis),
-# plus streamlit. Serves e5-base-v2 + faiss HNSW + ItemKNN from on-disk artifacts.
-streamlit>=1.39
-pandas>=2.0
-numpy>=1.26,<2.1
-scikit-learn>=1.3
-scipy>=1.11
-sentence-transformers>=2.6
-torch>=2.1
-faiss-cpu>=1.7
-pillow>=10.0
+# Same stack as requirements-api.txt minus the API layer (fastapi/redis), plus
+# streamlit. Serves e5-base-v2 + faiss HNSW + ItemKNN from on-disk artifacts.
+#
+# Pinned on purpose. The Space's August 2026 build resolved unpinned ranges to
+# starlette 1.4.0, whose GZipResponder made thread_minimum_size required
+# (restored as optional in 1.4.1), so Streamlit's Starlette server answered
+# every request with HTTP 500. Upgrade these together after a local run.
+# torch comes from the CPU wheel index in Dockerfile.space.
+streamlit==1.65.0
+starlette==1.7.0
+pandas==2.3.3
+numpy==1.26.4
+scikit-learn==1.8.0
+scipy==1.13.0
+sentence-transformers==5.2.3
+transformers==5.15.0
+torch==2.13.0
+faiss-cpu==1.9.0.post1
+pillow==12.3.0

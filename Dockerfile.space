@@ -3,7 +3,7 @@
 # no Milvus. Built FROM THE SPACE REPO, which additionally carries the small
 # artifacts that are gitignored on GitHub:
 #   models/cf_interactions.npz + cf_meta.json    ItemKNN CF champion
-#   data/eval/cf_split.json                      CF split (self-heal fallback)
+#   data/eval/cf_split.json + cf_manifest.json   CF split (self-heal fallback) + its stats
 # The ~29 MB catalog-embedding cache is NOT shipped: it is regenerated during
 # the image build (see the encode_catalog RUN below) with the exact same
 # ChampionEmbedder code path, so the served vectors match the eval harness.
@@ -21,19 +21,25 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 curl && rm -rf /var/lib/apt/lists/*
 
+# CPU-only torch first (the default PyPI wheel drags in ~3 GB of CUDA libraries),
+# then the pinned rest; requirements-space.txt's torch pin is already satisfied.
 COPY requirements-space.txt .
-RUN pip install --no-cache-dir -r requirements-space.txt
+RUN pip install --no-cache-dir torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu \
+ && pip install --no-cache-dir -r requirements-space.txt
 
 # Bake the query-encoder weights into the image so cold starts don't re-download.
 RUN python -c "from sentence_transformers import SentenceTransformer; \
 SentenceTransformer('intfloat/e5-base-v2')"
 
+COPY .streamlit ./.streamlit
+COPY assets/logo.svg assets/logo-mark.svg ./assets/
 COPY src ./src
 COPY data/9000plus.csv ./data/9000plus.csv
-COPY data/eval/cf_split.json ./data/eval/cf_split.json
+COPY data/eval/cf_split.json data/eval/cf_manifest.json ./data/eval/
 COPY models ./models
+COPY results/phase6_metrics.json results/phase2a_metrics.json ./results/
 
-# Build the catalog-embedding cache at image-build time (~9,826 movies, one-off).
+# Build the catalog-embedding cache at image-build time (~9,837 movies, one-off).
 # encode_catalog writes results/emb_cache/intfloat__e5-base-v2.npy + .time.json,
 # exactly the files the app's cache-first loader expects at startup.
 RUN python -c "import pandas as pd; \
@@ -42,8 +48,8 @@ emb = ChampionEmbedder().encode_catalog(pd.read_csv('data/9000plus.csv').fillna(
 print('catalog embedded:', emb.shape)"
 
 # HF Spaces may run the container as a non-root user: make HOME (=/app) writable
-# so streamlit can create .streamlit/ and the HF cache stays usable.
-RUN mkdir -p /app/.streamlit && chmod -R a+rwX /app
+# so streamlit can write its state and the HF cache stays usable.
+RUN chmod -R a+rwX /app
 
 EXPOSE 7860
 
