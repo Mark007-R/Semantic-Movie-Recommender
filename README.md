@@ -8,6 +8,24 @@ The project's spine is its offline evaluation harness, which was built **before*
 
 ---
 
+## The app
+
+A four-page Streamlit app, live on the [Hugging Face Space](https://iambatman07-semantic-movie-recommender.hf.space). No install or sign-in, and no vector database: it serves the champion stack from on-disk artifacts.
+
+![Discover — describe a mood in plain words and get posters ranked by e5-base-v2 + faiss HNSW + metadata rerank](assets/screens/discover.jpg)
+
+<table>
+<tr>
+<td width="50%"><img src="assets/screens/similar.jpg" alt="More like this page"><br><b>More like this</b>: any film's nearest neighbours in embedding space; every poster links to its own page</td>
+<td width="50%"><img src="assets/screens/for_you.jpg" alt="For you page"><br><b>For you</b>: ItemKNN recommendations from a few liked films, each with the pick that drove it</td>
+</tr>
+<tr>
+<td colspan="2"><img src="assets/screens/evaluation.jpg" alt="Evaluation page"><br><b>Evaluation</b>: the ablation ladder, frontier-LLM comparison and embedding bake-off, read from <code>results/</code></td>
+</tr>
+</table>
+
+---
+
 ## Architecture
 
 ![Architecture — content and CF paths, fusion, serving, and the evaluation harness](assets/architecture.png)
